@@ -37,6 +37,30 @@ from utils.general import (LOGGER, apply_classifier, check_file, check_img_size,
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import load_classifier, select_device, time_sync
 
+import json
+
+
+def add_item_to_list_in_dict(dictionary,index,item):
+    '''
+    直下にlistを持つdictに対して，与えられたindexにlistがすでにある場合はitemをappendし，listがない場合はitemが入ったリストを追加します。
+    '''
+    if type(dictionary.get(index))==list:
+        dictionary.get(index).append(item)
+    else:
+        dictionary[index]=[item]
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.integer):
+            return int(obj)
+        elif isinstance(obj, numpy.floating):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, torch.Tensor):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
 
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
@@ -201,7 +225,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # Second-stage classifier (optional)
         if classify:
             pred = apply_classifier(pred, modelc, img, im0s)
-
+        
+        save_dict = {}
         # Process predictions
         for i, det in enumerate(pred):  # per image
             seen += 1
@@ -234,6 +259,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                         with open(txt_path + '.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
+                        # append to dict
+                        add_item_to_list_in_dict(save_dict, txt_path, ('%g ' * len(line)).rstrip() % line)
+
 
                     if save_img or save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
@@ -269,6 +297,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                             save_path += '.mp4'
                         vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                     vid_writer[i].write(im0)
+            
+            if i%1000 == 999:
+                with open(f'save{i}.json','w') as f:
+                    json.dump(result_dict, f,indent= 4, cls = MyEncoder)
+                save_dict = {}
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
