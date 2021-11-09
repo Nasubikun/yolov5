@@ -299,7 +299,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     vid_writer[i].write(im0)
             
             if i%1000 == 999:
-                json_save_path = str(save_dir / 'labels' / {i}.json)
+                json_save_path = str(save_dir / 'json' / {i}.json)
                 print(f'save at {json_save_path}')
                 with open(json_save_path,'w') as f:
                     json.dump(result_dict, f,indent= 4, cls = MyEncoder)
