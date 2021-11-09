@@ -260,7 +260,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         with open(txt_path + '.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
                         # append to dict
-                        add_item_to_list_in_dict(save_dict, txt_path, ('%g ' * len(line)).rstrip() % line)
+                        add_item_to_list_in_dict(save_dict, frame, ('%g ' * len(line)).rstrip() % line)
 
 
                     if save_img or save_crop or view_img:  # Add bbox to image
@@ -299,7 +299,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     vid_writer[i].write(im0)
             
             if i%1000 == 999:
-                with open(f'save{i}.json','w') as f:
+                json_save_path = str(save_dir / 'labels' / {i}.json)
+                print(f'save at {json_save_path}')
+                with open(json_save_path,'w') as f:
                     json.dump(result_dict, f,indent= 4, cls = MyEncoder)
                 save_dict = {}
 
