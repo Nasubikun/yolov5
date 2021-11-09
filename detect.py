@@ -270,6 +270,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
+            if i%1000 == 999:
+                json_save_path = str(save_dir / 'labels' / {i}.json)
+                LOGGER.info(f'save at {json_save_path}')
+                with open(json_save_path,'w') as f:
+                    json.dump(result_dict, f,indent= 4, cls = MyEncoder)
+                save_dict = {}
             # Print time (inference-only)
             LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
 
@@ -298,12 +304,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                     vid_writer[i].write(im0)
             
-            if i%1000 == 999:
-                json_save_path = str(save_dir / 'json' / {i}.json)
-                print(f'save at {json_save_path}')
-                with open(json_save_path,'w') as f:
-                    json.dump(result_dict, f,indent= 4, cls = MyEncoder)
-                save_dict = {}
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
